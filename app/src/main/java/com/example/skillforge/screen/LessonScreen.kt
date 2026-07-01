@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillforge.data.model.Course
 import com.example.skillforge.data.model.Lesson
+import com.example.skillforge.data.model.Category
 import com.example.skillforge.data.navigation.Screen
 import com.example.skillforge.screen.state.UiState
 import com.example.skillforge.viewmodel.LessonViewModel
@@ -47,12 +48,12 @@ fun LessonScreen(
         }
         is UiState.Error -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = (state as UiState.Error).message)
+                Text(text = (state as UiState.Error).message, color = Color.Red)
             }
         }
         is UiState.Success -> {
-            val (course, lesson) = (state as UiState.Success).data
-            LessonContent(navController, course, lesson)
+            val (course, lesson, category) = (state as UiState.Success).data
+            LessonContent(navController, course, lesson, category)
         }
     }
 }
@@ -61,8 +62,15 @@ fun LessonScreen(
 fun LessonContent(
     navController: NavController,
     course: Course,
-    currentLesson: Lesson
+    currentLesson: Lesson,
+    category: Category
 ) {
+    val themeColor = try {
+        Color(android.graphics.Color.parseColor(category.iconColor))
+    } catch (e: Exception) {
+        Color(0xFF18B7A7)
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
         // Video Player Placeholder
         Box(
@@ -126,7 +134,7 @@ fun LessonContent(
                         modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                         colors = SliderDefaults.colors(
                             thumbColor = Color.White,
-                            activeTrackColor = Color(0xFF18B7A7)
+                            activeTrackColor = themeColor
                         )
                     )
                     Text("06:00", color = Color.White, fontSize = 12.sp)
@@ -142,7 +150,7 @@ fun LessonContent(
             item {
                 Text(
                     text = "LESSON ${course.lessons.indexOf(currentLesson) + 1} · ${course.title.uppercase()}",
-                    color = Color(0xFF18B7A7),
+                    color = themeColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 )
@@ -165,11 +173,11 @@ fun LessonContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    LessonTab("Lessons", isSelected = true)
+                    LessonTab("Lessons", isSelected = true, themeColor = themeColor)
                     Spacer(modifier = Modifier.width(20.dp))
-                    LessonTab("Notes", isSelected = false)
+                    LessonTab("Notes", isSelected = false, themeColor = themeColor)
                     Spacer(modifier = Modifier.width(20.dp))
-                    LessonTab("Resources", isSelected = false)
+                    LessonTab("Resources", isSelected = false, themeColor = themeColor)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = Color(0xFFF0F0F0))
@@ -181,6 +189,7 @@ fun LessonContent(
                 LessonItem(
                     lesson = lesson,
                     isPlaying = isPlaying,
+                    themeColor = themeColor,
                     onClick = {
                         if (!isPlaying) {
                             navController.navigate(Screen.Lesson.createRoute(course.id, lesson.id)) {
@@ -198,7 +207,7 @@ fun LessonContent(
 }
 
 @Composable
-fun LessonTab(title: String, isSelected: Boolean) {
+fun LessonTab(title: String, isSelected: Boolean, themeColor: Color) {
     Column {
         Text(
             text = title,
@@ -212,21 +221,21 @@ fun LessonTab(title: String, isSelected: Boolean) {
                 modifier = Modifier
                     .width(40.dp)
                     .height(3.dp)
-                    .background(Color(0xFF18B7A7), RoundedCornerShape(2.dp))
+                    .background(themeColor, RoundedCornerShape(2.dp))
             )
         }
     }
 }
 
 @Composable
-fun LessonItem(lesson: Lesson, isPlaying: Boolean, onClick: () -> Unit) {
+fun LessonItem(lesson: Lesson, isPlaying: Boolean, themeColor: Color, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isPlaying) Color(0xFFE8FBF7) else Color.White
+            containerColor = if (isPlaying) themeColor.copy(alpha = 0.1f) else Color.White
         ),
         border = if (!isPlaying) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF0F0F0)) else null
     ) {
@@ -238,7 +247,7 @@ fun LessonItem(lesson: Lesson, isPlaying: Boolean, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        if (isPlaying) Color(0xFF18B7A7) else Color(0xFFF0F0F0),
+                        if (isPlaying) themeColor else Color(0xFFF0F0F0),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -261,18 +270,18 @@ fun LessonItem(lesson: Lesson, isPlaying: Boolean, onClick: () -> Unit) {
                 Text(
                     text = if (isPlaying) "Now playing · ${lesson.durationMinutes} min" else "${lesson.durationMinutes} min",
                     fontSize = 14.sp,
-                    color = if (isPlaying) Color(0xFF18B7A7) else Color.Gray
+                    color = if (isPlaying) themeColor else Color.Gray
                 )
             }
             if (lesson.isFree && !isPlaying) {
                 Surface(
-                    color = Color(0xFFE8FBF7),
+                    color = themeColor.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = "FREE",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = Color(0xFF18B7A7),
+                        color = themeColor,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )

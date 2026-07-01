@@ -22,6 +22,11 @@ import com.example.skillforge.screen.component.CourseCard
 import com.example.skillforge.screen.component.SectionTitle
 import com.example.skillforge.screen.state.UiState
 import com.example.skillforge.viewmodel.HomeViewModel
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 
 
 @Composable
@@ -34,15 +39,25 @@ fun HomeScreen( navController: NavHostController) {
     when (state) {
 
         is UiState.Loading -> {
-
-            // Abhi simple hai, baad me loader improve karenge
-
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF18B7A7))
+            }
         }
 
         is UiState.Error -> {
-
-            // Error UI baad me banayenge
-
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = (state as UiState.Error).message,
+                    color = Color.Red,
+                    fontSize = 16.sp
+                )
+            }
         }
 
         is UiState.Success -> {
